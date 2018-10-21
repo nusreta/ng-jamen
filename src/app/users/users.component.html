@@ -1,0 +1,135 @@
+<div class="row" *ngIf="models && auth.loggedIn">
+  <div class="col-md-12">
+    <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+      Prijavljeni ste kao <strong>{{ auth.loggedUser.firstname }} {{ auth.loggedUser.firstname }}</strong>.
+      Nalazite se na dijelu za uređivanje <strong>Administrtora</strong>.
+      Za uređivanje nekog od njih kliknite na njegovo ime.
+      Za dodavanje novog kliknite na dugme <strong>Novi</strong>.
+    </div>
+  </div>
+  <div class="col-md-12">
+    <div class="input-group input-group-lg">
+      <div class="input-group-prepend">
+        <span class="input-group-text"><i class="fa fa-search"></i></span>
+      </div>
+      <input [(ngModel)]="keyword" name="keyword" (ngModelChange)="search()" type="text" placeholder="Pretraži..."
+        class="form-control">
+      <div class="input-group-append">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#users-modal" type="button" (click)="model = {}">Novi</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-12">
+    <table class="table table-stripped table-hover" [mfData]="models" #mf="mfDataTable" [mfRowsOnPage]="5">
+      <thead>
+        <tr>
+          <th style="width: 30%">
+            <mfDefaultSorter by="firstname">Ime</mfDefaultSorter>
+          </th>
+          <th style="width: 30%">
+            <mfDefaultSorter by="lastname">Prezime</mfDefaultSorter>
+          </th>
+          <th style="width: 20%">
+            <mfDefaultSorter by="username">Email</mfDefaultSorter>
+          </th>
+          <th style="width: 20%">
+            <mfDefaultSorter by="_createAt">Kreiran</mfDefaultSorter>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of mf.data" data-toggle="modal" data-target="#users-modal" (click)="model = item; model.password = null;">
+          <td>{{item.firstname}}</td>
+          <td>{{item.lastname}}</td>
+          <td>{{item.username}}</td>
+          <td>{{item._createdAt | date}}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">
+            <mfBootstrapPaginator [rowsOnPageSet]="[5,10,25]"></mfBootstrapPaginator>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+</div>
+
+<div class="modal fade" id="users-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ model._id ? model.firstname + ' ' + model.lastname : 'Novi administrator'}}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row">
+            <div class="col-md-12" *ngIf="model._id">
+              <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                Kreiran <strong> {{ model._createdAt | date }} </strong> od strane <strong>{{ model._createdBy }}</strong>.
+                Posljednji put modificiran <strong>{{ model._updatedAt | date }}</strong> od strane <strong>{{
+                  model._updatedBy }}</strong>.
+              </div>
+            </div>
+            <div class="col-md-12" *ngIf="!model._id">
+              <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                Unesite sve potrebne informacije i kliknite na dugme <strong> Spasi </strong>.
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="col-form-label">Ime</label>
+                <input type="text" [(ngModel)]="model.firstname" placeholder="Ime..." class="form-control" name="firstname">
+              </div>
+              <div class="form-group">
+                <label class="col-form-label">Prezime</label>
+                <input type="text" [(ngModel)]="model.lastname" placeholder="Prezime..." class="form-control" name="lastname">
+              </div>
+              <div class="form-group">
+                <label class="col-form-label">Email</label>
+                <input type="text" [(ngModel)]="model.username" placeholder="Email..." class="form-control" name="username">
+              </div>
+              <div class="form-group">
+                <label class="col-form-label">Lozinka</label>
+                <input type="password" [(ngModel)]="model.password" placeholder="Lozinka..." class="form-control" name="password">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger pull-left" data-toggle="modal" data-target="#users-modal-confirm"
+          data-dismiss="modal" *ngIf="model._id">Obriši</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-success" (click)="model._id ? update() : insert()" data-dismiss="modal"
+          [disabled]="!model.firstname || !model.lastname || !model.username || (!model.password && !model._id)">Spasi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="users-modal-confirm" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Upozorenje</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Da li ste sigurni da želite izbrisati administrtora <strong>{{ model.firstname + ' ' + model.lastname }}</strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-danger" (click)="delete()" data-dismiss="modal">Obriši</button>
+      </div>
+    </div>
+  </div>
+</div>
